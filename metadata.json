@@ -1,0 +1,6 @@
+{
+  "name": "Countr",
+  "description": "A floating counter application.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
