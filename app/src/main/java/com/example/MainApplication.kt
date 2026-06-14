@@ -18,7 +18,7 @@ class MainApplication : Application() {
             AppDatabase::class.java,
             "countr_database"
         )
-        .fallbackToDestructiveMigration()
+        .fallbackToDestructiveMigration(true)
         .build()
         repository = SessionRepository(database.sessionDao())
     }
