@@ -10,7 +10,8 @@ data class CounterSession(
     val checkCount: Int = 0,
     val crossCount: Int = 0,
     val totalCheckTimeMs: Long = 0L,
-    val totalCrossTimeMs: Long = 0L
+    val totalCrossTimeMs: Long = 0L,
+    val note: String = ""
 ) {
     val accuracy: Float
         get() {

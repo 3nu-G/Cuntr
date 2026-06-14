@@ -1,8 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:width="66dp"
-        android:height="66dp"
-        android:drawable="@drawable/ic_launcher_bg_1781117194066"
-        android:gravity="center" />
-</layer-list>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Deep purple circle background -->
+    <path
+        android:fillColor="#6750A4"
+        android:pathData="M54,54m-44,0a44,44 0,1 1,88 0a44,44 0,1 1,-88 0" />
+
+    <!-- Thin white inner ring -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeAlpha="0.4"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+
+    <!-- Check mark (left, top half) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 32 46 L 40 54 L 54 36" />
+
+    <!-- Cross (right, top half) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 60 38 L 76 54 M 76 38 L 60 54" />
+        
+    <!-- Text '55' below -->
+    <path 
+        android:fillColor="#FFFFFF" 
+        android:pathData="M 46 64 L 38 64 L 38 68 L 44 68 C 45 68 46 69 46 71 C 46 73 45 74 44 74 L 38 74 L 38 76 L 44 76 C 46 76 48 74 48 71 C 48 68 46 66 44 66 L 40 66 L 40 64 L 46 64 Z M 58 64 L 50 64 L 50 68 L 56 68 C 57 68 58 69 58 71 C 58 73 57 74 56 74 L 50 74 L 50 76 L 56 76 C 58 76 60 74 60 71 C 60 68 58 66 56 66 L 52 66 L 52 64 L 58 64 Z" />
+
+</vector>

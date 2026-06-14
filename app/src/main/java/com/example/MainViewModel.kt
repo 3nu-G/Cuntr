@@ -47,6 +47,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateSession(session: CounterSession) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updateSession(session)
+        }
+    }
+
     fun importData(context: Context, uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             try {

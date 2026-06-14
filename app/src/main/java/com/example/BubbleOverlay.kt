@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,7 @@ fun BubbleOverlay(
     sizeStr: String,
     templateStr: String,
     enableTimer: Boolean,
+    overlayAlpha: Float = 0.95f,
     onClose: (Int, Int, Long, Long) -> Unit,
     onDrag: (Float, Float) -> Unit
 ) {
@@ -45,7 +47,7 @@ fun BubbleOverlay(
     val accuracy = if (total == 0) 0f else (checkCount.toFloat() / total.toFloat()) * 100f
     
     var dragYOffset by remember { mutableFloatStateOf(0f) }
-    
+
     val isCompact = templateStr.lowercase() == "compact"
     
     val width = when (sizeStr.lowercase()) {
@@ -90,17 +92,13 @@ fun BubbleOverlay(
             .width(width)
             .shadow(16.dp, RoundedCornerShape(50))
             .clip(RoundedCornerShape(50))
-            .background(Color(0xFF6750A4))
+            .background(Color(0xFF6750A4).copy(alpha = overlayAlpha))
             .border(2.dp, Color.White, RoundedCornerShape(50))
             .padding(8.dp)
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragEnd = {
-                        if (dragYOffset > 300f) { // threshold to close
-                            onClose(checkCount, crossCount, checkTimeTotal, crossTimeTotal)
-                        } else {
-                            dragYOffset = 0f
-                        }
+                        dragYOffset = 0f
                     }
                 ) { change, dragAmount ->
                     change.consume()
@@ -124,7 +122,12 @@ fun BubbleOverlay(
                     color = tColor,
                     fontSize = if (isCompact && sizeStr.lowercase() == "small") 8.sp else 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { isTimerRunning = !isTimerRunning }
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { isTimerRunning = !isTimerRunning },
+                            onDoubleTap = { elapsedTime = 0L }
+                        )
+                    }
                 )
             }
 
@@ -188,17 +191,27 @@ fun BubbleOverlay(
                     }
                 }
             }
-        }
-        
-        // Show close indicator when dragging downwards significantly
-        if (dragYOffset > 100f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Red.copy(alpha = 0.8f), RoundedCornerShape(50)),
-                contentAlignment = Alignment.Center
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Tiny explicit close button at the bottom
+            IconButton(
+                onClick = { onClose(checkCount, crossCount, checkTimeTotal, crossTimeTotal) },
+                modifier = Modifier.size(24.dp)
             ) {
-                Icon(Icons.Filled.Close, contentDescription = "Close", tint = Color.White)
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(Color.Black.copy(alpha = 0.3f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Close, 
+                        contentDescription = "Close", 
+                        tint = Color.White, 
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
             }
         }
     }

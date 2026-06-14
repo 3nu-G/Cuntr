@@ -31,10 +31,13 @@ class CounterOverlayService : Service() {
         lifecycleOwner?.onCreate()
     }
 
+    private var sessionNote: String = ""
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val sizeStr = intent?.getStringExtra("SIZE") ?: "Medium"
         val templateStr = intent?.getStringExtra("TEMPLATE") ?: "Standard"
         val enableTimer = intent?.getBooleanExtra("ENABLE_TIMER", false) ?: false
+        sessionNote = intent?.getStringExtra("NOTE") ?: ""
 
         if (composeView == null) {
             showOverlay(sizeStr, templateStr, enableTimer)
@@ -43,6 +46,9 @@ class CounterOverlayService : Service() {
     }
 
     private fun showOverlay(sizeStr: String, templateStr: String, enableTimer: Boolean) {
+        val prefs = getSharedPreferences("countr_settings", Context.MODE_PRIVATE)
+        val alpha = prefs.getFloat("bubble_alpha", 0.95f)
+
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -68,6 +74,7 @@ class CounterOverlayService : Service() {
                     sizeStr = sizeStr,
                     templateStr = templateStr,
                     enableTimer = enableTimer,
+                    overlayAlpha = alpha,
                     onClose = { check, cross, checkTime, crossTime -> 
                         saveSession(check, cross, checkTime, crossTime)
                         stopSelf() 
@@ -93,6 +100,7 @@ class CounterOverlayService : Service() {
             crossCount = cross,
             totalCheckTimeMs = checkTime,
             totalCrossTimeMs = crossTime,
+            note = sessionNote,
             timestamp = System.currentTimeMillis()
         )
         CoroutineScope(Dispatchers.IO).launch {
