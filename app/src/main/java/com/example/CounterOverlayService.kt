@@ -25,7 +25,7 @@ class CounterOverlayService : Service() {
     private var windowManager: WindowManager? = null
     private var composeView: ComposeView? = null
     private var lifecycleOwner: ComposeLifecycleOwner? = null
-    private var layoutParams: WindowManager.LayoutParams? = null
+    private var windowLayoutParams: WindowManager.LayoutParams? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -78,7 +78,7 @@ class CounterOverlayService : Service() {
         params.gravity = Gravity.TOP or Gravity.START
         params.x = 100
         params.y = 200
-        layoutParams = params
+        windowLayoutParams = params
 
         val view = ComposeView(this).apply {
             setViewTreeLifecycleOwner(lifecycleOwner)
@@ -95,7 +95,7 @@ class CounterOverlayService : Service() {
                         stopSelf()
                     },
                     onDrag = { dx, dy ->
-                        layoutParams?.let { currentParams ->
+                        windowLayoutParams?.let { currentParams ->
                             currentParams.x += dx.toInt()
                             currentParams.y += dy.toInt()
                             
@@ -120,7 +120,7 @@ class CounterOverlayService : Service() {
     // Clamp when rotating
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val params = layoutParams ?: return
+        val params = windowLayoutParams ?: return
         val view = composeView ?: return
         
         val metrics = resources.displayMetrics
