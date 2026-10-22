@@ -99,7 +99,6 @@ class CounterOverlayService : Service() {
                             currentParams.x += dx.toInt()
                             currentParams.y += dy.toInt()
                             
-                            // Clamp during drag so it doesn't fly off screen
                             val metrics = resources.displayMetrics
                             currentParams.x = currentParams.x.coerceIn(0, metrics.widthPixels - 100)
                             currentParams.y = currentParams.y.coerceIn(0, metrics.heightPixels - 100)
@@ -117,7 +116,6 @@ class CounterOverlayService : Service() {
         lifecycleOwner?.onResume()
     }
 
-    // Clamp when rotating
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val params = windowLayoutParams ?: return
