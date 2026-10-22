@@ -1,5 +1,6 @@
 package com.example
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -7,14 +8,13 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.Manifest
-import android.os.Build
-import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -44,8 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import com.example.data.CounterSession
 import com.example.ui.theme.CountrTheme
@@ -55,7 +53,7 @@ import java.util.*
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
-
+    
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     private val closeReceiver = object : BroadcastReceiver() {
@@ -73,7 +71,7 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(closeReceiver, IntentFilter("com.example.CLOSE_DASHBOARD"), Context.RECEIVER_NOT_EXPORTED)
         } else {
@@ -113,7 +111,12 @@ class MainActivity : ComponentActivity() {
             putExtra("ENABLE_TIMER", enableTimer)
             putExtra("NOTE", note)
         }
-        startService(serviceIntent)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
         
         val prefs = getSharedPreferences("countr_settings", Context.MODE_PRIVATE)
         if (prefs.getBoolean("auto_close", false)) {
@@ -121,7 +124,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -168,9 +170,7 @@ fun MainScreen(viewModel: MainViewModel, onStartSession: (String, String, Boolea
                         Icon(Icons.Filled.Upload, contentDescription = "Export", tint = Color(0xFF6750A4))
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         floatingActionButton = {
@@ -201,31 +201,16 @@ fun MainScreen(viewModel: MainViewModel, onStartSession: (String, String, Boolea
                     .padding(innerPadding)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "SESSION HISTORY",
-                        color = Color(0xFF49454F),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
-                        letterSpacing = 0.5.sp
-                    )
-                    Text(
-                        text = "${sessions.size} Total",
-                        color = Color(0xFF6750A4),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    )
+                    Text("SESSION HISTORY", color = Color(0xFF49454F), fontWeight = FontWeight.Medium, fontSize = 14.sp, letterSpacing = 0.5.sp)
+                    Text("${sessions.size} Total", color = Color(0xFF6750A4), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
                 
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(sessions, key = { it.id }) { session ->
@@ -305,39 +290,28 @@ fun SessionCard(session: CounterSession, onUpdateNote: (String) -> Unit) {
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = dateString, 
-                        fontSize = 12.sp, 
-                        color = Color(0xFF6750A4),
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    )
+                    Text(dateString, fontSize = 12.sp, color = Color(0xFF6750A4), fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(text = "${session.checkCount}", color = Color(0xFF2D6A4F), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                            Text("${session.checkCount}", color = Color(0xFF2D6A4F), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             Icon(Icons.Filled.Check, contentDescription = "Check", tint = Color(0xFF2D6A4F), modifier = Modifier.size(16.dp))
                         }
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(text = "${session.crossCount}", color = Color(0xFFB91C1C), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                            Text("${session.crossCount}", color = Color(0xFFB91C1C), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                             Icon(Icons.Filled.Close, contentDescription = "Cross", tint = Color(0xFFB91C1C), modifier = Modifier.size(16.dp))
                         }
                     }
                     if (session.totalCheckTimeMs > 0 || session.totalCrossTimeMs > 0) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(top = 8.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Filled.Timer, contentDescription = null, modifier = Modifier.size(12.dp), tint = Color(0xFF79747E))
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -353,35 +327,15 @@ fun SessionCard(session: CounterSession, onUpdateNote: (String) -> Unit) {
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Row(verticalAlignment = Alignment.Top) {
-                        Text(
-                            text = "${session.accuracy.toInt()}",
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Light,
-                            color = Color(0xFF1C1B1F)
-                        )
-                        Text(
-                            text = "%",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1C1B1F).copy(alpha = 0.4f),
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
+                        Text("${session.accuracy.toInt()}", fontSize = 32.sp, fontWeight = FontWeight.Light, color = Color(0xFF1C1B1F))
+                        Text("%", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1C1B1F).copy(alpha = 0.4f), modifier = Modifier.padding(top = 4.dp))
                     }
-                    Text(
-                        text = "ACCURACY",
-                        fontSize = 10.sp,
-                        color = Color(0xFF79747E),
-                        fontWeight = FontWeight.Medium
-                    )
+                    Text("ACCURACY", fontSize = 10.sp, color = Color(0xFF79747E), fontWeight = FontWeight.Medium)
                 }
             }
             if (session.note.isNotEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxWidth()
-                        .background(Color(0xFFF3EDF7))
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(text = session.note, fontSize = 12.sp, fontStyle = FontStyle.Italic, color = Color(0xFF49454F))
+                Box(modifier = Modifier.fillMaxWidth().background(Color(0xFFF3EDF7)).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(session.note, fontSize = 12.sp, fontStyle = FontStyle.Italic, color = Color(0xFF49454F))
                 }
             }
         }
@@ -406,11 +360,7 @@ fun NewSessionDialog(onDismiss: () -> Unit, onStart: (String, String, Boolean, S
                 Text("Bubble Size", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     sizes.forEach { size ->
-                        FilterChip(
-                            selected = selectedSize == size,
-                            onClick = { selectedSize = size },
-                            label = { Text(size) }
-                        )
+                        FilterChip(selected = selectedSize == size, onClick = { selectedSize = size }, label = { Text(size) })
                     }
                 }
                 
@@ -419,11 +369,7 @@ fun NewSessionDialog(onDismiss: () -> Unit, onStart: (String, String, Boolean, S
                 Text("Template", fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     templates.forEach { template ->
-                        FilterChip(
-                            selected = selectedTemplate == template,
-                            onClick = { selectedTemplate = template },
-                            label = { Text(template) }
-                        )
+                        FilterChip(selected = selectedTemplate == template, onClick = { selectedTemplate = template }, label = { Text(template) })
                     }
                 }
 

@@ -45,7 +45,6 @@ class CounterOverlayService : Service() {
         val enableTimer = intent?.getBooleanExtra("ENABLE_TIMER", false) ?: false
         sessionNote = intent?.getStringExtra("NOTE") ?: ""
 
-        // Start as Foreground Service so it doesn't die when the screen sleeps
         val notification = NotificationCompat.Builder(this, "countr_channel")
             .setContentTitle("Countr is running")
             .setContentText("Your floating timer is active")
@@ -64,7 +63,7 @@ class CounterOverlayService : Service() {
         val prefs = getSharedPreferences("countr_settings", Context.MODE_PRIVATE)
         val alpha = prefs.getFloat("bubble_alpha", 0.95f)
 
-        layoutParams = WindowManager.LayoutParams(
+        val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -76,11 +75,12 @@ class CounterOverlayService : Service() {
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             PixelFormat.TRANSLUCENT
         )
-        layoutParams?.gravity = Gravity.TOP or Gravity.START
-        layoutParams?.x = 100
-        layoutParams?.y = 200
+        params.gravity = Gravity.TOP or Gravity.START
+        params.x = 100
+        params.y = 200
+        layoutParams = params
 
-        composeView = ComposeView(this).apply {
+        val view = ComposeView(this).apply {
             setViewTreeLifecycleOwner(lifecycleOwner)
             setViewTreeSavedStateRegistryOwner(lifecycleOwner)
             setViewTreeViewModelStoreOwner(lifecycleOwner)
@@ -95,22 +95,24 @@ class CounterOverlayService : Service() {
                         stopSelf()
                     },
                     onDrag = { dx, dy ->
-                        val params = layoutParams ?: return@BubbleOverlay
-                        params.x += dx.toInt()
-                        params.y += dy.toInt()
-                        
-                        // Clamp during drag so it doesn't fly off screen
-                        val metrics = resources.displayMetrics
-                        params.x = params.x.coerceIn(0, metrics.widthPixels - 100)
-                        params.y = params.y.coerceIn(0, metrics.heightPixels - 100)
-                        
-                        windowManager?.updateViewLayout(this, params)
+                        layoutParams?.let { currentParams ->
+                            currentParams.x += dx.toInt()
+                            currentParams.y += dy.toInt()
+                            
+                            // Clamp during drag so it doesn't fly off screen
+                            val metrics = resources.displayMetrics
+                            currentParams.x = currentParams.x.coerceIn(0, metrics.widthPixels - 100)
+                            currentParams.y = currentParams.y.coerceIn(0, metrics.heightPixels - 100)
+                            
+                            windowManager?.updateViewLayout(this, currentParams)
+                        }
                     }
                 )
             }
         }
-
-        windowManager?.addView(composeView, layoutParams)
+        
+        composeView = view
+        windowManager?.addView(view, params)
         lifecycleOwner?.onStart()
         lifecycleOwner?.onResume()
     }
