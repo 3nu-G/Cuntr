@@ -7,6 +7,9 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.Manifest
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -52,6 +55,9 @@ import java.util.*
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+
+    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
     private val closeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "com.example.CLOSE_DASHBOARD") {
@@ -63,6 +69,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerReceiver(closeReceiver, IntentFilter("com.example.CLOSE_DASHBOARD"), Context.RECEIVER_NOT_EXPORTED)
